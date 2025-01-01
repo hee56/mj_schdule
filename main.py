@@ -196,16 +196,19 @@ def main():
                         else:
                             day_color = '#ffffff'
                         
-                        st.markdown(f"""
-                            <div style='text-align: center;'>
-                                <div style='color: {day_color}; font-weight: bold; font-size: 1.1em;'>
-                                    {day}
-                                </div>
-                                {f"<div style='color: #ffffff; font-size: 0.9em;'>공부: {format_time_display(total_study)}</div>" if total_study > 0 else ""}
-                                {f"<div style='color: #ffffff; font-size: 0.9em;'>휴식: {format_time_display(total_break)}</div>" if total_break > 0 else ""}
-                                {f"<div style='color: #ffffff;'>📝</div>" if has_review else ""}
-                            </div>
-                        """, unsafe_allow_html=True)
+                        # 학습과 휴식 시간 정보 준비
+                        study_info = f"<div style='color: #ffffff; font-size: 0.9em;'>공부: {format_time_display(total_study)}</div>" if total_study > 0 else ""
+                        break_info = f"<div style='color: #ffffff; font-size: 0.9em;'>휴식: {format_time_display(total_break)}</div>" if total_break > 0 else ""
+                        review_icon = f"<div style='color: #ffffff;'>📝</div>" if has_review else ""
+                        
+                        # HTML 마크다운으로 렌더링
+                        st.markdown(
+                            f"<div style='text-align: center;'>"
+                            f"<div style='color: {day_color}; font-weight: bold; font-size: 1.1em;'>{day}</div>"
+                            f"{study_info}{break_info}{review_icon}"
+                            f"</div>",
+                            unsafe_allow_html=True
+                        )
                     else:
                         st.write("")  # 빈 칸
 
