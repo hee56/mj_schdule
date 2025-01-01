@@ -30,16 +30,9 @@ with st.sidebar:
 if menu == '메인 페이지':
     st.title('메이지님의 첫 번째 streamlit app')
     
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        # 이미지 표시 (이미지 파일이 있다면)
-        st.image('assets/mouse.jpg', width=300)
-        
-    with col2:
-        st.markdown("### Welcome~")
-        st.markdown("페이지를 시작합니다!!")
-        st.markdown("이메일: @usja.hs.kr")
+    st.markdown("### Welcome~")
+    st.markdown("페이지를 시작합니다!!")
+    st.markdown("이메일: @usja.hs.kr")
 
 elif menu == '체크리스트':
     selected_date = st.date_input("날짜 선택", datetime.now())
