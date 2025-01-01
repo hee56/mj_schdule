@@ -354,7 +354,7 @@ def render_calendar(selected_date, data):
                 if day is not None:
                     date_str = f"{selected_date.year}-{selected_date.month:02d}-{day:02d}"
                     study_records = data['activities'].get(date_str, {}).get('study', [])
-                break_records = data['activities'].get(date_str, {}).get('break', [])
+                    break_records = data['activities'].get(date_str, {}).get('break', [])
                     total_study = sum(record['hours'] for record in study_records)
                     total_break = sum(record['hours'] for record in break_records)
                     has_review = date_str in data['reviews']
