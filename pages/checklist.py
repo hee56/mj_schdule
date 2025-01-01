@@ -1,8 +1,21 @@
 import streamlit as st
+import pandas as pd
 from datetime import datetime
 from utils.data_manager import get_day_type, format_time_display
 
+def init_session_state(activity_type):
+    """세션 스테이트 초기화"""
+    if f'new_{activity_type}_hours' not in st.session_state:
+        st.session_state[f'new_{activity_type}_hours'] = 0.0
+    if f'new_{activity_type}_memo' not in st.session_state:
+        st.session_state[f'new_{activity_type}_memo'] = ''
+
 def render_activity_section(activity_type, date_key, title):
+    """활동(학습/휴식) 섹션 렌더링"""
+    
+    # 세션 스테이트 초기화
+    init_session_state(activity_type)
+    
     if date_key not in st.session_state.data['activities']:
         st.session_state.data['activities'][date_key] = {'study': [], 'break': []}
     
@@ -11,15 +24,11 @@ def render_activity_section(activity_type, date_key, title):
     
     if activities:
         st.write(f"오늘의 {title} 기록:")
-        for idx, record in enumerate(activities):
+        for record in activities:
             st.markdown(f"- {format_time_display(record['hours'])}: {record['memo']} ({record['timestamp']})")
         
         st.markdown(f"**총 {title} 시간: {format_time_display(total_hours)}**")
         st.markdown("---")
-
-    # 시간 선택을 위한 session state 초기화
-    if f'new_{activity_type}_hours' not in st.session_state:
-        st.session_state[f'new_{activity_type}_hours'] = 0.0
 
     # 시간 조절 버튼과 표시
     col1, col2, col3 = st.columns([1, 1, 2])
@@ -38,11 +47,10 @@ def render_activity_section(activity_type, date_key, title):
     with col3:
         st.markdown(f"**선택된 시간: {format_time_display(st.session_state[f'new_{activity_type}_hours'])}**")
 
-    memo = st.text_input(
-        f'{title} 내용',
-        key=f'new_{activity_type}_memo'
-    )
+    # 메모 입력
+    memo = st.text_input(f'{title} 내용', key=f'memo_{activity_type}')
 
+    # 시간 추가 버튼
     if st.button(f'{title} 시간 추가', key=f'add_{activity_type}'):
         if st.session_state[f'new_{activity_type}_hours'] > 0:
             st.session_state.data['activities'][date_key][activity_type].append({
@@ -53,6 +61,7 @@ def render_activity_section(activity_type, date_key, title):
             st.session_state[f'new_{activity_type}_hours'] = 0.0
             st.rerun()
 
+    # 초기화 버튼
     if st.button(f'오늘 {title} 기록 초기화', key=f'reset_{activity_type}'):
         st.session_state.data['activities'][date_key][activity_type] = []
         st.session_state[f'new_{activity_type}_hours'] = 0.0
@@ -61,6 +70,8 @@ def render_activity_section(activity_type, date_key, title):
     return total_hours
 
 def render_checklist(selected_date):
+    """체크리스트 페이지 렌더링"""
+    
     date_key = selected_date.strftime("%Y-%m-%d")
     
     # 스케줄 정의
@@ -121,7 +132,7 @@ def render_checklist(selected_date):
     for item in current_schedule:
         checked = st.checkbox(
             f"{item['label']} ({item['time']})",
-            key=f"{date_key}_{item['id']}",
+            key=f"check_{date_key}_{item['id']}",
             value=st.session_state.data['checklist'][date_key].get(item['id'], False)
         )
         st.session_state.data['checklist'][date_key][item['id']] = checked
@@ -165,9 +176,8 @@ def render_checklist(selected_date):
 
     # 일일 총평
     st.subheader('오늘의 총평')
-    review_content = ""
-    if date_key in st.session_state.data['reviews']:
-        review_content = st.session_state.data['reviews'][date_key]['content']
+    
+    review_content = st.session_state.data['reviews'].get(date_key, {}).get('content', '')
     
     daily_review = st.text_area(
         "오늘 하루를 돌아보며...",
