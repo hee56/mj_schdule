@@ -12,6 +12,9 @@ from utils.data_manager import get_day_type, format_time_display
 # 서울 시간대 설정
 seoul_tz = pytz.timezone('Asia/Seoul')
 
+# 현재 서울 시간 가져오기
+current_time = datetime.now(seoul_tz).strftime('%H:%M')
+
 def init_session_state(activity_type):
     """세션 스테이트 초기화"""
     if f'new_{activity_type}_hours' not in st.session_state:
