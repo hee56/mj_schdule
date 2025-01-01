@@ -226,7 +226,7 @@ def main():
                 {'id': 'sleep', 'label': '수면 시간 (7:00)', 'time': '7:00'},
                 {'id': 'class', 'label': '수업 (3:30)', 'time': '3:30'},
                 {'id': 'meal', 'label': '식사 및 휴식 (3:00↓)', 'time': '3:00'},
-                {'id': 'study', 'label': '학습 (9:30↑)', 'time': '9:30'},
+                {'id': 'study', 'label': '학습 (9:00↑)', 'time': '9:00'},
                 {'id': 'screen', 'label': '수업 화면 녹화 확인', 'time': '-'},
                 {'id': 'focus', 'label': '전자기기 목적 외 사용 없음', 'time': '-'}
             ],
@@ -250,7 +250,7 @@ def main():
 
         target_study_hours = {
             'mwf': 8,
-            'tt': 9.5,
+            'tt': 9,
             'saturday': 3,
             'sunday': 11
         }
