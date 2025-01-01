@@ -110,6 +110,117 @@ def backup_data():
         df = pd.read_csv('reviews_data.csv')
         df.to_csv(f'backup/reviews_data_{backup_time}.csv', index=False)
 
+def show_data_analysis():
+    st.markdown("### 학습 데이터 분석")
+    
+    if not os.path.exists('activities_data.csv'):
+        st.warning("아직 저장된 데이터가 없습니다.")
+        return
+        
+    # 데이터 로드
+    df = pd.read_csv('activities_data.csv')
+    df['date'] = pd.to_datetime(df['date'])
+    
+    # 탭 생성
+    tab1, tab2, tab3 = st.tabs(["일별 분석", "월별 분석", "상세 데이터"])
+    
+    with tab1:
+        st.subheader("일별 학습/휴식 시간")
+        
+        # 일별 총계 계산
+        daily_summary = df.pivot_table(
+            index='date',
+            columns='activity_type',
+            values='hours',
+            aggfunc='sum'
+        ).reset_index().fillna(0)
+        
+        daily_summary = daily_summary.sort_values('date')
+        
+        # 차트 생성
+        st.line_chart(
+            daily_summary.set_index('date')[['study', 'break']],
+            use_container_width=True
+        )
+        
+        # 통계 표시
+        st.markdown("#### 일별 통계")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            avg_study = daily_summary['study'].mean()
+            st.metric("평균 학습 시간", f"{avg_study:.1f}시간")
+            
+        with col2:
+            avg_break = daily_summary['break'].mean()
+            st.metric("평균 휴식 시간", f"{avg_break:.1f}시간")
+            
+        with col3:
+            study_days = len(daily_summary[daily_summary['study'] > 0])
+            st.metric("총 학습 일수", f"{study_days}일")
+    
+    with tab2:
+        st.subheader("월별 학습/휴식 시간")
+        
+        # 월별 총계 계산
+        df['month'] = df['date'].dt.strftime('%Y-%m')
+        monthly_summary = df.pivot_table(
+            index='month',
+            columns='activity_type',
+            values='hours',
+            aggfunc='sum'
+        ).reset_index().fillna(0)
+        
+        monthly_summary = monthly_summary.sort_values('month')
+        
+        # 차트 생성
+        st.bar_chart(
+            monthly_summary.set_index('month')[['study', 'break']],
+            use_container_width=True
+        )
+        
+        # 월별 상세 데이터
+        st.markdown("#### 월별 상세 데이터")
+        st.dataframe(monthly_summary.style.format({
+            'study': '{:.1f}시간',
+            'break': '{:.1f}시간'
+        }))
+    
+    with tab3:
+        st.subheader("전체 기록 데이터")
+        
+        # 데이터 정렬 및 포맷팅
+        display_df = df.sort_values('date', ascending=False).copy()
+        display_df['date'] = display_df['date'].dt.strftime('%Y-%m-%d')
+        display_df = display_df.rename(columns={
+            'date': '날짜',
+            'activity_type': '활동 유형',
+            'hours': '시간',
+            'memo': '메모',
+            'timestamp': '기록 시각'
+        })
+        
+        # 활동 유형 한글화
+        display_df['활동 유형'] = display_df['활동 유형'].map({
+            'study': '학습',
+            'break': '휴식'
+        })
+        
+        st.dataframe(
+            display_df,
+            use_container_width=True,
+            hide_index=True
+        )
+        
+        # CSV 다운로드 버튼
+        csv = display_df.to_csv(index=False)
+        st.download_button(
+            label="CSV 다운로드",
+            data=csv,
+            file_name="학습기록.csv",
+            mime="text/csv"
+        )
+
 def get_day_type(date):
     day = date.weekday()
     if day == 6:  # Sunday
@@ -243,7 +354,7 @@ def render_calendar(selected_date, data):
                 if day is not None:
                     date_str = f"{selected_date.year}-{selected_date.month:02d}-{day:02d}"
                     study_records = data['activities'].get(date_str, {}).get('study', [])
-                    break_records = data['activities'].get(date_str, {}).get('break', [])
+                break_records = data['activities'].get(date_str, {}).get('break', [])
                     total_study = sum(record['hours'] for record in study_records)
                     total_break = sum(record['hours'] for record in break_records)
                     has_review = date_str in data['reviews']
@@ -335,7 +446,6 @@ def main():
     if date_key not in st.session_state.data['checklist']:
         st.session_state.data['checklist'][date_key] = {}
 
-    # 체크리스트 표시
     for item in current_schedule:
         checked = st.checkbox(
             f"{item['label']} ({item['time']})",
@@ -401,16 +511,27 @@ def main():
         }
 
     # 캘린더 표시
-    st.markdown("---")  # 구분선 추가
+    st.markdown("---")
     render_calendar(selected_date, st.session_state.data)
 
     # 데이터 저장
     save_data(st.session_state.data)
 
-    # 데이터 백업 버튼
-    if st.button('데이터 백업'):
-        backup_data()
-        st.success('데이터가 백업되었습니다!')
+    # 데이터 백업 및 분석 섹션
+    st.markdown("---")
+    st.subheader('데이터 백업 및 분석')
+    
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        if st.button('데이터 백업'):
+            backup_data()
+            st.success('데이터가 백업되었습니다!')
+    
+    with col2:
+        st.markdown("데이터를 백업하고 학습 현황을 분석할 수 있습니다.")
+    
+    # 데이터 분석 표시
+    show_data_analysis()
 
 if __name__ == "__main__":
     main()
