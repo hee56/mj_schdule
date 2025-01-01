@@ -1,11 +1,6 @@
 import streamlit as st
-from datetime import datetime
 import pandas as pd
-import os
-from utils.data_manager import load_data, save_data, backup_data
-from pages.checklist import render_checklist
-from pages.calendar import render_calendar
-from pages.analysis import show_data_analysis
+from datetime import datetime
 from utils.data_manager import get_day_type, format_time_display
 
 def init_session_state(activity_type):
@@ -36,7 +31,7 @@ def render_activity_section(activity_type, date_key, title):
         st.markdown("---")
 
     # 시간 조절 버튼과 표시
-    col1, col2, col3 = st.columns([1, 1, 2])
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
     
     with col1:
         if st.button("-30분", key=f"minus_{activity_type}"):
@@ -50,6 +45,11 @@ def render_activity_section(activity_type, date_key, title):
             st.rerun()
 
     with col3:
+        if st.button("+5분", key=f"plus5_{activity_type}"):
+            st.session_state[f'new_{activity_type}_hours'] += 5 / 60
+            st.rerun()
+
+    with col4:
         st.markdown(f"**선택된 시간: {format_time_display(st.session_state[f'new_{activity_type}_hours'])}**")
 
     # 메모 입력
@@ -175,79 +175,6 @@ def render_checklist(selected_date):
             evaluation = 'WARNING'
             color = 'orange'
         else:
-            evaluation = 'NORMAL'
+            evaluation = 'GOOD'
             color = 'green'
         st.markdown(f":{color}[{evaluation}]")
-
-    # 일일 총평
-    st.subheader('오늘의 총평')
-    
-    review_content = st.session_state.data['reviews'].get(date_key, {}).get('content', '')
-    
-    daily_review = st.text_area(
-        "오늘 하루를 돌아보며...",
-        value=review_content,
-        height=150,
-        placeholder="오늘의 성과, 부족한 점, 내일의 계획 등을 기록해보세요."
-    )
-
-    if daily_review:
-        st.session_state.data['reviews'][date_key] = {
-            'content': daily_review,
-            'timestamp': datetime.now().strftime('%H:%M')
-        }
-
-def ensure_directories():
-    """필요한 디렉토리 생성"""
-    os.makedirs('data', exist_ok=True)
-    os.makedirs('backup', exist_ok=True)
-
-def main():
-    # 페이지 기본 설정
-    st.set_page_config(
-        page_title="메이지님의 첫 번째 streamlit app",
-        page_icon="🐭",
-        layout="wide"
-    )
-
-    # 디렉토리 생성
-    ensure_directories()
-
-    # 데이터 초기화
-    if 'data' not in st.session_state:
-        st.session_state.data = load_data()
-
-    # 타이틀 표시
-    st.title('일일 학습 체크리스트')
-    
-    # 날짜 선택
-    selected_date = st.date_input("날짜 선택", datetime.now())
-
-    # 사이드바 
-    with st.sidebar:
-        st.title('메뉴')
-        
-        view_option = st.radio(
-            "보기 선택",
-            ["캘린더", "데이터 분석"]
-        )
-        
-        if st.button('데이터 백업'):
-            backup_data()
-            st.success('데이터가 백업되었습니다!')
-
-    # 메인 컨텐츠 (체크리스트)
-    render_checklist(selected_date)
-    
-    # 데이터 저장
-    save_data(st.session_state.data)
-    
-    # 하단에 선택된 뷰 표시
-    st.markdown("---")
-    if view_option == "캘린더":
-        render_calendar(selected_date)
-    else:  # 데이터 분석
-        show_data_analysis()
-
-if __name__ == "__main__":
-    main()
