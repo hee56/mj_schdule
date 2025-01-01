@@ -106,21 +106,18 @@ def render_activity_section(activity_type, date_key, title):
         st.markdown(f"**총 {title} 시간: {format_time_display(total_hours)}**")
         st.markdown("---")
 
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        new_hours = st.number_input(
-            f'{title} 시간',
-            min_value=0.0,
-            max_value=24.0,
-            value=0.0,
-            step=0.5,
-            key=f'new_{activity_type}_hours'
-        )
-    with col2:
-        memo = st.text_input(
-            f'{title} 내용',
-            key=f'new_{activity_type}_memo'
-        )
+    new_hours = st.number_input(
+        f'{title} 시간',
+        min_value=0.0,
+        max_value=24.0,
+        value=0.0,
+        step=0.5,
+        key=f'new_{activity_type}_hours'
+    )
+    memo = st.text_input(
+        f'{title} 내용',
+        key=f'new_{activity_type}_memo'
+    )
 
     if st.button(f'{title} 시간 추가', key=f'add_{activity_type}'):
         if new_hours > 0:
@@ -274,12 +271,12 @@ def main():
             )
             st.session_state.data['checklist'][date_key][item['id']] = checked
 
-        # 학습 시간 섹션
-        st.subheader('학습 시간 기록')
-        col1, col2 = st.columns([3, 1])
-        with col1:
+        # 학습 시간 섹션과 평가
+        study_col1, study_col2 = st.columns([3, 1])
+        with study_col1:
+            st.subheader('학습 시간 기록')
             study_hours = render_activity_section('study', date_key, '학습')
-        with col2:
+        with study_col2:
             st.markdown("##### 학습 평가")
             target_hours = target_study_hours[day_type]
             if study_hours >= target_hours:
@@ -293,12 +290,12 @@ def main():
                 color = 'gray'
             st.markdown(f":{color}[{evaluation}]")
 
-        # 휴식 시간 섹션
-        st.subheader('휴식 시간 기록')
-        col1, col2 = st.columns([3, 1])
-        with col1:
+        # 휴식 시간 섹션과 평가
+        break_col1, break_col2 = st.columns([3, 1])
+        with break_col1:
+            st.subheader('휴식 시간 기록')
             break_hours = render_activity_section('break', date_key, '휴식')
-        with col2:
+        with break_col2:
             st.markdown("##### 휴식 평가")
             if break_hours > 3:
                 evaluation = 'EMERGENCY'
