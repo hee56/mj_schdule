@@ -151,16 +151,11 @@ def main():
     with left_col:
         st.markdown("""
         <style>
-        .calendar-cell {
-            background-color: #f0f2f6;
-            border-radius: 5px;
-            padding: 5px;
-            margin: 2px;
-        }
         .calendar-header {
             font-weight: bold;
             text-align: center;
             padding: 5px;
+            color: #ffffff;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -199,20 +194,20 @@ def main():
                         elif idx == 6:  # 토요일
                             day_color = '#4b7bff'
                         else:
-                            day_color = '#1a1a1a'
+                            day_color = '#ffffff'
                         
                         st.markdown(f"""
-                            <div class='calendar-cell'>
-                                <div style='text-align: center; color: {day_color}; font-weight: bold; font-size: 1.1em;'>
+                            <div style='text-align: center;'>
+                                <div style='color: {day_color}; font-weight: bold; font-size: 1.1em;'>
                                     {day}
                                 </div>
-                                {f"<div style='text-align: center; color: #1a1a1a; font-size: 0.9em;'>공부: {format_time_display(total_study)}</div>" if total_study > 0 else ""}
-                                {f"<div style='text-align: center; color: #1a1a1a; font-size: 0.9em;'>휴식: {format_time_display(total_break)}</div>" if total_break > 0 else ""}
-                                {f"<div style='text-align: center; color: #1a1a1a;'>📝</div>" if has_review else ""}
+                                {f"<div style='color: #ffffff; font-size: 0.9em;'>공부: {format_time_display(total_study)}</div>" if total_study > 0 else ""}
+                                {f"<div style='color: #ffffff; font-size: 0.9em;'>휴식: {format_time_display(total_break)}</div>" if total_break > 0 else ""}
+                                {f"<div style='color: #ffffff;'>📝</div>" if has_review else ""}
                             </div>
                         """, unsafe_allow_html=True)
                     else:
-                        st.markdown("<div class='calendar-cell' style='background-color: #e6e6e6;'></div>", unsafe_allow_html=True)
+                        st.write("")  # 빈 칸
 
     with right_col:
         schedules = {
