@@ -149,43 +149,70 @@ def main():
     date_key = selected_date.strftime("%Y-%m-%d")
 
     with left_col:
+        st.markdown("""
+        <style>
+        .calendar-cell {
+            background-color: #f0f2f6;
+            border-radius: 5px;
+            padding: 5px;
+            margin: 2px;
+        }
+        .calendar-header {
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         st.markdown("### 월간 기록")
         month_matrix = create_calendar_grid(selected_date)
         
+        # 요일 헤더
         cols = st.columns(7)
         weekdays = ['일', '월', '화', '수', '목', '금', '토']
         for idx, day in enumerate(weekdays):
             with cols[idx]:
-                color = 'red' if idx == 0 else 'blue' if idx == 6 else 'black'
-                st.markdown(f"<h5 style='text-align: center; color: {color};'>{day}</h5>", unsafe_allow_html=True)
+                if idx == 0:  # 일요일
+                    st.markdown(f"<div class='calendar-header' style='color: #ff4b4b;'>{day}</div>", unsafe_allow_html=True)
+                elif idx == 6:  # 토요일
+                    st.markdown(f"<div class='calendar-header' style='color: #4b7bff;'>{day}</div>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<div class='calendar-header'>{day}</div>", unsafe_allow_html=True)
 
+        # 달력 그리드 생성
         for week in month_matrix:
             cols = st.columns(7)
             for idx, day in enumerate(week):
                 with cols[idx]:
                     if day is not None:
                         date_str = f"{selected_date.year}-{selected_date.month:02d}-{day:02d}"
-                        
-                        if date_str in st.session_state.data['activities']:
-                            study_hours = sum(record['hours'] for record in st.session_state.data['activities'][date_str]['study'])
-                            break_hours = sum(record['hours'] for record in st.session_state.data['activities'][date_str]['break'])
-                        else:
-                            study_hours = 0
-                            break_hours = 0
-                            
+                        study_records = st.session_state.data['activities'].get(date_str, {}).get('study', [])
+                        break_records = st.session_state.data['activities'].get(date_str, {}).get('break', [])
+                        total_study = sum(record['hours'] for record in study_records)
+                        total_break = sum(record['hours'] for record in break_records)
                         has_review = date_str in st.session_state.data['reviews']
                         
-                        color = 'red' if idx == 0 else 'blue' if idx == 6 else 'black'
-                        st.markdown(f"<h4 style='text-align: center; color: {color};'>{day}</h4>", unsafe_allow_html=True)
+                        # 날짜 색상 설정
+                        if idx == 0:  # 일요일
+                            day_color = '#ff4b4b'
+                        elif idx == 6:  # 토요일
+                            day_color = '#4b7bff'
+                        else:
+                            day_color = '#1a1a1a'
                         
-                        if study_hours > 0:
-                            st.markdown(f"<p style='text-align: center;'>공부: {format_time_display(study_hours)}</p>", unsafe_allow_html=True)
-                        if break_hours > 0:
-                            st.markdown(f"<p style='text-align: center;'>휴식: {format_time_display(break_hours)}</p>", unsafe_allow_html=True)
-                        if has_review:
-                            st.markdown("<p style='text-align: center;'>📝</p>", unsafe_allow_html=True)
+                        st.markdown(f"""
+                            <div class='calendar-cell'>
+                                <div style='text-align: center; color: {day_color}; font-weight: bold; font-size: 1.1em;'>
+                                    {day}
+                                </div>
+                                {f"<div style='text-align: center; color: #1a1a1a; font-size: 0.9em;'>공부: {format_time_display(total_study)}</div>" if total_study > 0 else ""}
+                                {f"<div style='text-align: center; color: #1a1a1a; font-size: 0.9em;'>휴식: {format_time_display(total_break)}</div>" if total_break > 0 else ""}
+                                {f"<div style='text-align: center; color: #1a1a1a;'>📝</div>" if has_review else ""}
+                            </div>
+                        """, unsafe_allow_html=True)
                     else:
-                        st.write("")
+                        st.markdown("<div class='calendar-cell' style='background-color: #e6e6e6;'></div>", unsafe_allow_html=True)
 
     with right_col:
         schedules = {
