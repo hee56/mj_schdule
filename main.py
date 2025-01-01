@@ -27,44 +27,36 @@ def main():
     if 'data' not in st.session_state:
         st.session_state.data = load_data()
 
+    # 타이틀 표시
+    st.title('일일 학습 체크리스트')
+    
+    # 날짜 선택
+    selected_date = st.date_input("날짜 선택", datetime.now())
+
     # 사이드바 
     with st.sidebar:
-        st.title('Hello')
+        st.title('메뉴')
         
-        menu = st.selectbox(
-            '메뉴 선택',
-            ['메인 페이지', '체크리스트', '데이터 분석']
+        view_option = st.radio(
+            "보기 선택",
+            ["캘린더", "데이터 분석"]
         )
-
-    # 메인 컨텐츠
-    if menu == '메인 페이지':
-        st.title('메이지님의 첫 번째 streamlit app')
         
-        st.markdown("### Welcome~")
-        st.markdown("페이지를 시작합니다!!")
-        st.markdown("이메일: @usja.hs.kr")
+        if st.button('데이터 백업'):
+            backup_data()
+            st.success('데이터가 백업되었습니다!')
 
-    elif menu == '체크리스트':
-        selected_date = st.date_input("날짜 선택", datetime.now())
-        render_checklist(selected_date)
-        st.markdown("---")
+    # 메인 컨텐츠 (체크리스트)
+    render_checklist(selected_date)
+    
+    # 데이터 저장
+    save_data(st.session_state.data)
+    
+    # 하단에 선택된 뷰 표시
+    st.markdown("---")
+    if view_option == "캘린더":
         render_calendar(selected_date)
-        
-        # 데이터 저장
-        save_data(st.session_state.data)
-
-    elif menu == '데이터 분석':
-        st.subheader('데이터 백업 및 분석')
-        
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            if st.button('데이터 백업'):
-                backup_data()
-                st.success('데이터가 백업되었습니다!')
-        
-        with col2:
-            st.markdown("데이터를 백업하고 학습 현황을 분석할 수 있습니다.")
-        
+    else:  # 데이터 분석
         show_data_analysis()
 
 if __name__ == "__main__":
