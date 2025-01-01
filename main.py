@@ -274,24 +274,42 @@ def main():
             )
             st.session_state.data['checklist'][date_key][item['id']] = checked
 
+        # 학습 시간 섹션
         st.subheader('학습 시간 기록')
-        study_hours = render_activity_section('study', date_key, '학습')
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            study_hours = render_activity_section('study', date_key, '학습')
+        with col2:
+            st.markdown("##### 학습 평가")
+            target_hours = target_study_hours[day_type]
+            if study_hours >= target_hours:
+                evaluation = 'GOOD'
+                color = 'green'
+            elif study_hours > 0:
+                evaluation = 'BAD'
+                color = 'red'
+            else:
+                evaluation = '미입력'
+                color = 'gray'
+            st.markdown(f":{color}[{evaluation}]")
 
+        # 휴식 시간 섹션
         st.subheader('휴식 시간 기록')
-        break_hours = render_activity_section('break', date_key, '휴식')
-
-        target_hours = target_study_hours[day_type]
-        if study_hours >= target_hours:
-            evaluation = 'GOOD'
-            color = 'green'
-        elif study_hours > 0:
-            evaluation = 'BAD'
-            color = 'red'
-        else:
-            evaluation = '미입력'
-            color = 'gray'
-
-        st.markdown(f"**학습 평가:** :{color}[{evaluation}]")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            break_hours = render_activity_section('break', date_key, '휴식')
+        with col2:
+            st.markdown("##### 휴식 평가")
+            if break_hours > 3:
+                evaluation = 'EMERGENCY'
+                color = 'red'
+            elif break_hours > 2.5:
+                evaluation = 'WARNING'
+                color = 'orange'
+            else:
+                evaluation = 'NORMAL'
+                color = 'green'
+            st.markdown(f":{color}[{evaluation}]")
 
         # 일일 총평
         st.subheader('오늘의 총평')
