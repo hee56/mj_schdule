@@ -3,25 +3,23 @@ import calendar
 from utils.data_manager import format_time_display
 
 def create_calendar_grid(selected_date):
-    month_matrix = []
-    week = []
-    first_day = calendar.monthrange(selected_date.year, selected_date.month)[0]
-    days_in_month = calendar.monthrange(selected_date.year, selected_date.month)[1]
+    # 달력 객체 생성 (일요일부터 시작)
+    cal = calendar.Calendar(firstweekday=6)  # 6은 일요일을 의미
     
-    for i in range(first_day):
-        week.append(None)
-        
-    for day in range(1, days_in_month + 1):
-        week.append(day)
-        if len(week) == 7:
-            month_matrix.append(week)
-            week = []
-            
-    if week:
-        while len(week) < 7:
-            week.append(None)
-        month_matrix.append(week)
-        
+    # 해당 월의 모든 날짜 리스트 가져오기
+    month_dates = list(cal.monthdays2calendar(selected_date.year, selected_date.month))
+    
+    # 날짜 매트릭스 생성
+    month_matrix = []
+    for week in month_dates:
+        week_dates = []
+        for day, weekday in week:
+            if day == 0:  # 이번 달에 속하지 않는 날짜
+                week_dates.append(None)
+            else:
+                week_dates.append(day)
+        month_matrix.append(week_dates)
+    
     return month_matrix
 
 def render_calendar(selected_date):
