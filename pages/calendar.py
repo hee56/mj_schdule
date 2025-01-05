@@ -3,8 +3,8 @@ import calendar
 from utils.data_manager import format_time_display
 
 def create_calendar_grid(selected_date):
-    # 달력 객체 생성 (일요일부터 시작)
-    cal = calendar.Calendar(firstweekday=6)  # 6은 일요일을 의미
+    # 달력 객체 생성 (firstweekday=3으로 설정하여 1월 1일이 수요일이 되도록 함)
+    cal = calendar.Calendar(firstweekday=3)  # 3은 수요일을 의미
     
     # 해당 월의 모든 날짜 리스트 가져오기
     month_dates = list(cal.monthdays2calendar(selected_date.year, selected_date.month))
@@ -37,19 +37,19 @@ def render_calendar(selected_date):
     st.markdown("### 월간 기록")
     month_matrix = create_calendar_grid(selected_date)
     
-    # 요일 헤더
+    # 요일 헤더 (수요일부터 시작)
     cols = st.columns(7)
-    weekdays = ['일', '월', '화', '수', '목', '금', '토']
+    weekdays = ['수', '목', '금', '토', '일', '월', '화']
     for idx, day in enumerate(weekdays):
         with cols[idx]:
-            if idx == 0:  # 일요일
+            if idx == 4:  # 일요일
                 st.markdown(f"<div class='calendar-header' style='color: #ff4b4b;'>{day}</div>", unsafe_allow_html=True)
-            elif idx == 6:  # 토요일
+            elif idx == 3:  # 토요일
                 st.markdown(f"<div class='calendar-header' style='color: #4b7bff;'>{day}</div>", unsafe_allow_html=True)
             else:
                 st.markdown(f"<div class='calendar-header'>{day}</div>", unsafe_allow_html=True)
 
-    # 달력 그리드 생성
+    # 달력 그리드 생성 (요일 색상 인덱스도 수정)
     for week in month_matrix:
         cols = st.columns(7)
         for idx, day in enumerate(week):
@@ -62,10 +62,10 @@ def render_calendar(selected_date):
                     total_break = sum(record['hours'] for record in break_records)
                     has_review = date_str in st.session_state.data['reviews']
                     
-                    # 날짜 색상 설정
-                    if idx == 0:  # 일요일
+                    # 날짜 색상 설정 (인덱스 수정)
+                    if idx == 4:  # 일요일
                         day_color = '#ff4b4b'
-                    elif idx == 6:  # 토요일
+                    elif idx == 3:  # 토요일
                         day_color = '#4b7bff'
                     else:
                         day_color = '#ffffff'
