@@ -3,37 +3,43 @@ import calendar
 from utils.data_manager import format_time_display
 
 def create_calendar_grid(selected_date):
-    # 달력 객체 생성
-    cal = calendar.Calendar()
+    from datetime import datetime, timedelta
     
-    # 해당 월의 모든 날짜를 가져옴
-    month_dates = list(cal.itermonthdays2(selected_date.year, selected_date.month))
+    # 해당 월의 1일 구하기
+    first_day = selected_date.replace(day=1)
     
-    # 주 단위로 데이터 구성
+    # 해당 월의 마지막 날짜 구하기
+    if selected_date.month == 12:
+        last_day = selected_date.replace(year=selected_date.year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        last_day = selected_date.replace(month=selected_date.month + 1, day=1) - timedelta(days=1)
+    
+    # 달력에 표시할 첫 날짜 구하기 (해당 월 1일이 속한 주의 일요일)
+    calendar_start = first_day - timedelta(days=first_day.weekday() + 1)
+    if first_day.weekday() == 6:  # 1일이 일요일인 경우
+        calendar_start = first_day
+    
+    # 날짜 채우기
     month_matrix = []
-    week = []
+    current_date = calendar_start
     
-    # 월의 첫 날 구하기
-    first_day = month_dates[0][1]  # (day, weekday)의 weekday
-    
-    # 첫 주 빈칸 채우기
-    for i in range(first_day):
-        week.append(None)
-    
-    # 나머지 날짜 채우기
-    for day, weekday in month_dates:
-        if day != 0:  # 실제 날짜인 경우만 추가
-            week.append(day)
-            if len(week) == 7:
-                month_matrix.append(week)
-                week = []
-    
-    # 마지막 주 남은 공간 채우기
-    if week:
-        while len(week) < 7:
-            week.append(None)
-        month_matrix.append(week)
-    
+    # 6주 분량의 날짜 생성
+    for week in range(6):
+        week_dates = []
+        for i in range(7):  # 일요일부터 토요일까지
+            # 현재 월에 속하는 날짜만 표시, 나머지는 None
+            if current_date.month == selected_date.month:
+                week_dates.append(current_date.day)
+            else:
+                week_dates.append(None)
+            current_date += timedelta(days=1)
+        month_matrix.append(week_dates)
+        
+        # 마지막 날짜를 넘어갔고, 현재 주가 비어있다면 중단
+        if current_date > last_day and all(d is None for d in week_dates):
+            month_matrix.pop()
+            break
+            
     return month_matrix
 
 def render_calendar(selected_date):
