@@ -1,54 +1,89 @@
 import streamlit as st
-import calendar
 from datetime import datetime, timedelta
 from utils.data_manager import format_time_display
 
-def adjust_day_order(days):
-    """월요일부터 시작하는 날짜를 수요일부터 시작하도록 조정"""
-    # 앞의 3일(월,화,수)을 뒤로 이동
-    return days[2:] + days[:2]
-
 def create_calendar_grid(selected_date):
-    c = calendar.monthcalendar(selected_date.year, selected_date.month)
+    # 해당 월의 첫 날과 마지막 날 구하기
+    first_day = selected_date.replace(day=1)
+    if selected_date.month == 12:
+        last_day = selected_date.replace(year=selected_date.year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        last_day = selected_date.replace(month=selected_date.month + 1, day=1) - timedelta(days=1)
+
+    # 1일의 요일 구하기 (0:월요일, 6:일요일)
+    first_weekday = first_day.weekday()
     
-    # 수요일부터 시작하는 달력으로 조정
-    first_day_weekday = selected_date.replace(day=1).weekday()  # 0=월요일, ..., 6=일요일
+    # 달력에 표시할 첫 날짜 구하기 (1일이 속한 주의 월요일)
+    start_date = first_day - timedelta(days=first_weekday)
     
-    # 첫 주가 비어있으면 제거
-    if all(day == 0 for day in c[0]):
-        c.pop(0)
+    # 달력 생성
+    calendar_days = []
+    current_date = start_date
     
-    return c
+    while len(calendar_days) < 42:  # 6주 분량
+        week = []
+        for _ in range(7):
+            if current_date.month == selected_date.month:
+                week.append(current_date.day)
+            else:
+                week.append(None)
+            current_date += timedelta(days=1)
+        calendar_days.append(week)
+        
+        # 마지막 주가 모두 다음 달이면 중단
+        if current_date > last_day and all(d is None for d in week):
+            calendar_days.pop()
+            break
+            
+    return calendar_days
 
 def render_calendar(selected_date):
-    st.markdown("### 월간 기록")
-    month_matrix = create_calendar_grid(selected_date)
+    st.markdown("""
+    <style>
+    .calendar-header {
+        font-weight: bold;
+        text-align: center;
+        padding: 5px;
+        margin-bottom: 10px;
+    }
+    .calendar-cell {
+        text-align: center;
+        padding: 8px;
+        min-height: 80px;
+    }
+    .day-number {
+        font-weight: bold;
+        font-size: 1.2em;
+        margin-bottom: 5px;
+    }
+    .activity-info {
+        font-size: 0.9em;
+        margin-top: 3px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-    # 요일 순서 조정 (수요일부터 시작)
-    weekdays = adjust_day_order(['수', '목', '금', '토', '일', '월', '화'])
+    # 월 표시
+    st.markdown(f"### {selected_date.year}년 {selected_date.month}월")
     
     # 요일 헤더
     cols = st.columns(7)
+    weekdays = ['일', '월', '화', '수', '목', '금', '토']
     for idx, day in enumerate(weekdays):
         with cols[idx]:
-            # 일요일 (원래 인덱스에서 2일 이동)
-            if day == '일':
-                color = '#ff4b4b'
-            # 토요일 (원래 인덱스에서 2일 이동)
-            elif day == '토':
-                color = '#4b7bff'
-            else:
-                color = '#ffffff'
-            st.markdown(f"<div style='text-align: center; color: {color}; font-weight: bold;'>{day}</div>", unsafe_allow_html=True)
+            color = '#ff4b4b' if idx == 0 else '#4b7bff' if idx == 6 else '#ffffff'
+            st.markdown(
+                f"<div class='calendar-header' style='color: {color};'>{day}</div>",
+                unsafe_allow_html=True
+            )
 
-    # 달력 내용 표시
-    for week in month_matrix:
+    # 달력 그리드 생성
+    calendar_days = create_calendar_grid(selected_date)
+    for week in calendar_days:
         cols = st.columns(7)
-        week = adjust_day_order(week)  # 요일 순서 조정
-        
         for idx, day in enumerate(week):
             with cols[idx]:
-                if day != 0:
+                if day is not None:
                     date_str = f"{selected_date.year}-{selected_date.month:02d}-{day:02d}"
                     study_records = st.session_state.data['activities'].get(date_str, {}).get('study', [])
                     break_records = st.session_state.data['activities'].get(date_str, {}).get('break', [])
@@ -56,22 +91,30 @@ def render_calendar(selected_date):
                     total_break = sum(record['hours'] for record in break_records)
                     has_review = date_str in st.session_state.data['reviews']
                     
-                    # 날짜 표시 (요일에 따른 색상)
-                    if weekdays[idx] == '일':
-                        color = '#ff4b4b'
-                    elif weekdays[idx] == '토':
-                        color = '#4b7bff'
-                    else:
-                        color = '#ffffff'
-                        
-                    st.markdown(
-                        f"<div style='text-align: center;'>"
-                        f"<div style='color: {color}; font-weight: bold; font-size: 1.1em;'>{day}</div>"
-                        f"{'<div style=\"color: #ffffff; font-size: 0.9em;\">공부: ' + format_time_display(total_study) + '</div>' if total_study > 0 else ''}"
-                        f"{'<div style=\"color: #ffffff; font-size: 0.9em;\">휴식: ' + format_time_display(total_break) + '</div>' if total_break > 0 else ''}"
-                        f"{'<div style=\"color: #ffffff;\">📝</div>' if has_review else ''}"
-                        f"</div>",
-                        unsafe_allow_html=True
-                    )
+                    # 날짜 색상 설정
+                    color = '#ff4b4b' if idx == 0 else '#4b7bff' if idx == 6 else '#ffffff'
+                    
+                    html_content = [
+                        f"<div class='calendar-cell'>",
+                        f"<div class='day-number' style='color: {color};'>{day}</div>"
+                    ]
+                    
+                    if total_study > 0:
+                        html_content.append(
+                            f"<div class='activity-info' style='color: #ffffff;'>"
+                            f"공부: {format_time_display(total_study)}</div>"
+                        )
+                    if total_break > 0:
+                        html_content.append(
+                            f"<div class='activity-info' style='color: #ffffff;'>"
+                            f"휴식: {format_time_display(total_break)}</div>"
+                        )
+                    if has_review:
+                        html_content.append(
+                            "<div class='activity-info' style='color: #ffffff;'>📝</div>"
+                        )
+                    
+                    html_content.append("</div>")
+                    st.markdown("".join(html_content), unsafe_allow_html=True)
                 else:
                     st.write("")
