@@ -11,10 +11,17 @@ def create_calendar_grid(selected_date):
         last_day = selected_date.replace(month=selected_date.month + 1, day=1) - timedelta(days=1)
 
     # 1일의 요일 구하기 (0:월요일, 6:일요일)
-    first_weekday = first_day.weekday()
+    #first_weekday = first_day.weekday()
     
     # 달력에 표시할 첫 날짜 구하기 (1일이 속한 주의 월요일)
-    start_date = first_day - timedelta(days=first_weekday)
+    #start_date = first_day - timedelta(days=first_weekday)
+
+    # 첫날의 요일 계산 (0: 월요일, 6: 일요일)
+    first_weekday = first_day.weekday()
+    
+    # 달력 시작 날짜를 1일이 포함된 주의 일요일로 설정
+    start_date = first_day - timedelta(days=(first_weekday + 1) % 7)
+
     
     # 달력 생성
     calendar_days = []
