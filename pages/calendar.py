@@ -17,7 +17,7 @@ def create_calendar_grid(selected_date):
     #start_date = first_day - timedelta(days=first_weekday)
 
     # 첫 날의 요일 계산 (0: 월요일, 6: 일요일)
-    first_weekday = first_day.weekday()
+    first_weekday = (first_day.weekday() + 1) % 7
     
     # 달력 시작 날짜를 1일이 포함된 주의 일요일로 설정
     start_date = first_day - timedelta(days=first_weekday)
