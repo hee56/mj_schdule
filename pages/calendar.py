@@ -1,3 +1,43 @@
+import streamlit as st
+from datetime import datetime, timedelta
+from utils.data_manager import format_time_display
+
+def create_calendar_grid(selected_date):
+    # 해당 월의 첫 날과 마지막 날 구하기
+    first_day = selected_date.replace(day=1)
+    if selected_date.month == 12:
+        last_day = selected_date.replace(year=selected_date.year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        last_day = selected_date.replace(month=selected_date.month + 1, day=1) - timedelta(days=1)
+
+    # 요일 계산 수정
+    first_weekday = calendar.weekday(first_day.year, first_day.month, first_day.day)
+
+    # 달력 시작 날짜 수정
+    start_date = first_day - timedelta(days=first_weekday - 6)
+  
+
+    # 달력 생성
+    calendar_days = []
+    current_date = start_date
+  
+    while len(calendar_days) < 42:  # 6주 분량
+        week = []
+        for _ in range(7):
+            if current_date.month == selected_date.month:
+                week.append(current_date.day)
+            else:
+                week.append(None)
+            current_date += timedelta(days=1)
+        calendar_days.append(week)
+
+        # 마지막 주가 모두 다음 달이면 중단
+        if current_date > last_day and all(d is None for d in week):
+            calendar_days.pop()
+            break
+            
+    return calendar_days
+
 def render_calendar(selected_date):
     st.markdown("""
     <style>
