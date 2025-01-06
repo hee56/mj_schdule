@@ -212,24 +212,26 @@ def main():
     if 'data' not in st.session_state:
         st.session_state.data = load_data()
 
-    # 타이틀 표시
-    st.title('일일 학습 체크리스트')
-    
-    # 날짜 선택
-    selected_date = st.date_input("날짜 선택", datetime.now())
-
     # 사이드바 
     with st.sidebar:
         st.title('메뉴')
         
         view_option = st.radio(
             "보기 선택",
-            ["캘린더", "데이터 분석"]
+            ["데이터 분석"]  # 캘린더는 체크리스트 아래에 항상 표시되도록 수정
         )
         
         if st.button('데이터 백업'):
             backup_data()
             st.success('데이터가 백업되었습니다!')
+
+    # 타이틀 표시
+    st.title('일일 학습 체크리스트')
+    
+    # 날짜 선택을 위한 열 생성
+    date_col1, date_col2 = st.columns([2, 3])
+    with date_col1:
+        selected_date = st.date_input("날짜 선택", datetime.now())
 
     # 메인 컨텐츠 (체크리스트)
     render_checklist(selected_date)
@@ -237,12 +239,14 @@ def main():
     # 데이터 저장
     save_data(st.session_state.data)
     
-    # 하단에 선택된 뷰 표시
-    st.markdown("---")
-    if view_option == "캘린더":
-        render_calendar(selected_date)
-    else:  # 데이터 분석
+    # 캘린더는 항상 체크리스트 아래에 표시
+    st.markdown("---")  # 구분선 추가
+    render_calendar(selected_date)
+    
+    # 데이터 분석 선택시 표시
+    if view_option == "데이터 분석":
+        st.markdown("---")
         show_data_analysis()
-
+        
 if __name__ == "__main__":
     main()
