@@ -10,17 +10,11 @@ def create_calendar_grid(selected_date):
     else:
         last_day = selected_date.replace(month=selected_date.month + 1, day=1) - timedelta(days=1)
 
-    # 1일의 요일 구하기 (0:월요일, 6:일요일)
-    #first_weekday = first_day.weekday()
-    
-    # 달력에 표시할 첫 날짜 구하기 (1일이 속한 주의 월요일)
-    #start_date = first_day - timedelta(days=first_weekday)
+    # 요일 계산 수정
+    first_weekday = calendar.weekday(first_day.year, first_day.month, first_day.day)
 
-    # 첫 날의 요일 계산 (0: 월요일, 6: 일요일)
-    first_weekday = (first_day.weekday() + 1) % 7
-    
-    # 달력 시작 날짜를 1일이 포함된 주의 일요일로 설정
-    start_date = first_day - timedelta(days=first_weekday)
+    # 달력 시작 날짜 수정
+    start_date = first_day - timedelta(days=first_weekday - 6)
 
     
     # 달력 생성
@@ -85,6 +79,7 @@ def render_calendar(selected_date):
             )
 
     # 달력 그리드 생성
+    # 달력 그리드 생성
     calendar_days = create_calendar_grid(selected_date)
     for week in calendar_days:
         cols = st.columns(7)
@@ -105,7 +100,7 @@ def render_calendar(selected_date):
                         f"<div class='calendar-cell'>",
                         f"<div class='day-number' style='color: {color};'>{day}</div>"
                     ]
-                    
+                    '''
                     if total_study > 0:
                         html_content.append(
                             f"<div class='activity-info' style='color: #ffffff;'>"
@@ -120,7 +115,13 @@ def render_calendar(selected_date):
                         html_content.append(
                             "<div class='activity-info' style='color: #ffffff;'>📝</div>"
                         )
-                    
+                    '''
+                    for record in study_records:
+                        html_content.append(
+                            f"<div class='activity-info' style='color: #ffffff;'>"
+                            f"공부: {record['subject']} ({record['hours']}시간)</div>"
+                        )
+                        
                     html_content.append("</div>")
                     st.markdown("".join(html_content), unsafe_allow_html=True)
                 else:
